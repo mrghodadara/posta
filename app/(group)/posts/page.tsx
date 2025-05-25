@@ -2,9 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import { Button } from '@/components/button/Index';
 
 // Mock data for posts
 const posts = [
@@ -160,8 +157,6 @@ export default function PostsList() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
-
       <main className="flex-grow">
         <section className="relative py-20 overflow-hidden">
           {/* Background gradients */}
@@ -377,18 +372,9 @@ export default function PostsList() {
                 </div>
               ))}
             </div>
-
-            {/* Create Post Button */}
-            <div className="mt-12 text-center">
-              <Link href="/posts/new">
-                <Button>Write a Story</Button>
-              </Link>
-            </div>
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }

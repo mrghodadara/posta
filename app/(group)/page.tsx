@@ -283,9 +283,9 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="text-center mt-12">
+            <div className="flex justify-center items-center mt-8">
               <Link href="/posts">
-                <Button>View All Posts</Button>
+                <Button className="!w-fit">View All Posts</Button>
               </Link>
             </div>
           </div>

@@ -7,12 +7,17 @@ import { EmailIcon } from '@/components/icons/EmailIcon';
 import { Logo } from '@/components/icons/Logo';
 import { UserIcon } from '@/components/icons/UserIcon';
 import { Spinner } from '@/components/loader/Spinner';
+import { useAuth } from '@/contexts/auth.context';
+import { AuthAPI } from '@/http/auth';
 import { useFormik } from 'formik';
 import Link from 'next/link';
 import React from 'react';
+import toast from 'react-hot-toast';
 import * as Yup from 'yup';
 
 const Index = () => {
+  const { setUser } = useAuth();
+
   const {
     values,
     errors,
@@ -41,9 +46,27 @@ const Index = () => {
     }),
     onSubmit: (
       { email, password, firstName, lastName },
-      { setSubmitting, resetForm, setFieldError }
+      { setSubmitting, resetForm }
     ) => {
       setSubmitting(true);
+
+      AuthAPI.signUp({ email, password, firstName, lastName })
+        .then((response) => {
+          console.log('response>>>', response);
+
+          if (response?.status === 201) {
+            setUser(response?.data?.user);
+            localStorage.setItem('accessToken', response?.data?.accessToken);
+            resetForm();
+          }
+        })
+        .catch((error) => {
+          console.log('error', error);
+          toast.error(error?.response?.data?.message);
+        })
+        .finally(() => {
+          setSubmitting(false);
+        });
     },
   });
 

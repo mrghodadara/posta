@@ -44,7 +44,7 @@ export function withAuth<P>(
 
     if (isPageLoading || isLoading) {
       return (
-        <div className="flex items-center justify-center">
+        <div className="h-screen w-full flex justify-center items-center">
           <Spinner stroke="#1D7AFC" width={40} height={40} />
         </div>
       );

@@ -50,13 +50,13 @@ const Header = () => {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
             <Link
-              href="/login"
+              href="/sign-in"
               className="relative text-gray-600 hover:text-gray-900 font-medium transition-colors group"
             >
               <span className="relative z-10">Sign In</span>
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
-            <Link href="/signup">
+            <Link href="/sign-up">
               <Button className="!w-auto">Get Started</Button>
             </Link>
           </nav>
@@ -87,8 +87,9 @@ const Header = () => {
 
         {/* Enhanced Mobile Navigation */}
         <div
-          className={`md:hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
-            } overflow-hidden`}
+          className={`md:hidden transition-all duration-300 ease-in-out ${
+            isMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
+          } overflow-hidden`}
         >
           <nav className="flex flex-col space-y-4 py-4 border-t border-gray-100">
             <Link

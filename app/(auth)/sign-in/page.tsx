@@ -7,6 +7,7 @@ import { EmailIcon } from '@/components/icons/EmailIcon';
 import { Logo } from '@/components/icons/Logo';
 import { Spinner } from '@/components/loader/Spinner';
 import { useAuth } from '@/contexts/auth.context';
+import { withAuth } from '@/hoc/withAuth';
 import { AuthAPI } from '@/http/auth';
 import { useFormik } from 'formik';
 import Link from 'next/link';
@@ -158,4 +159,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default withAuth(Index, false);

@@ -1,6 +1,7 @@
 'use client';
 import { UserAPI } from '@/http/user';
 import { UserType } from '@/types/user';
+import { useRouter } from 'next/navigation';
 import {
   createContext,
   Dispatch,
@@ -15,13 +16,22 @@ interface AuthContextType {
   user: UserType | null;
   isLoading: boolean;
   setUser: Dispatch<SetStateAction<null>>;
+  handleLogout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const router = useRouter();
+
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    setUser(null);
+    router.push('/');
+  };
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
@@ -45,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, isLoading }}>
+    <AuthContext.Provider value={{ user, setUser, isLoading, handleLogout }}>
       {children}
     </AuthContext.Provider>
   );

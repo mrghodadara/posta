@@ -6,6 +6,7 @@ import { Button } from '@/components/button/Index';
 import { MenuIcon } from '../icons/MenuIcon';
 import { CloseIcon } from '../icons/CloseIcon';
 import { useAuth } from '@/contexts/auth.context';
+import { UserMenu } from './UserMenu';
 
 const Header = () => {
   const { user, isLoading } = useAuth();
@@ -60,9 +61,7 @@ const Header = () => {
               ) : (
                 <>
                   {user ? (
-                    <p>
-                      {user?.firstName} {user?.lastName}
-                    </p>
+                    <UserMenu />
                   ) : (
                     <Link href="/sign-in">
                       <Button className="!w-auto">Get Started</Button>
@@ -79,7 +78,7 @@ const Header = () => {
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
-            {isMenuOpen ? <MenuIcon /> : <CloseIcon />}
+            {isMenuOpen ? <CloseIcon /> : <MenuIcon />}
           </button>
         </div>
 
@@ -103,9 +102,29 @@ const Header = () => {
               Posts
             </Link>
 
-            <Link href="/sign-in" className="block">
-              <Button className="w-full">Get Started</Button>
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/profile"
+                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors px-2 py-1 hover:bg-gray-50 rounded-lg"
+                >
+                  Profile
+                </Link>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('accessToken');
+                    window.location.href = '/sign-in';
+                  }}
+                  className="text-left text-red-600 hover:text-red-700 font-medium transition-colors px-2 py-1 hover:bg-gray-50 rounded-lg"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link href="/sign-in" className="block">
+                <Button className="w-full">Get Started</Button>
+              </Link>
+            )}
           </nav>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { LoginType, SignUpType } from '@/types/auth';
+import { ChangePasswordType, LoginType, SignUpType } from '@/types/auth';
 import { axios } from '.';
 
 const signUp = (data: SignUpType) => {
@@ -9,14 +9,14 @@ const login = (data: LoginType) => {
   return axios.post('/auth/login', data);
 };
 
-const authMe = () => {
-  return axios.get('/auth/me');
+const changePassword = (data: ChangePasswordType) => {
+  return axios.post('/auth/change-password', data);
 };
 
 const AuthAPI = {
   signUp,
   login,
-  authMe,
+  changePassword,
 };
 
 export { AuthAPI };

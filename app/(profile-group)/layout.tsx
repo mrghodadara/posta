@@ -1,6 +1,5 @@
-import Footer from '@/components/layout/Footer';
 import Header from '@/components/layout/Header';
-import { UserSidebar } from '@/components/pages/profile/UserSidebar';
+import { UserSidebar } from '@/components/layout/UserSidebar';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -41,7 +40,7 @@ export default function RootLayout({
           </div>
         </section>
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }

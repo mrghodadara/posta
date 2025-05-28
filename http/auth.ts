@@ -13,10 +13,15 @@ const changePassword = (data: ChangePasswordType) => {
   return axios.post('/auth/change-password', data);
 };
 
+const deleteAccount = () => {
+  return axios.delete('/auth/account');
+};
+
 const AuthAPI = {
   signUp,
   login,
   changePassword,
+  deleteAccount,
 };
 
 export { AuthAPI };

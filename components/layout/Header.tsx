@@ -3,8 +3,12 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/button/Index';
+import { MenuIcon } from '../icons/MenuIcon';
+import { CloseIcon } from '../icons/CloseIcon';
+import { useAuth } from '@/contexts/auth.context';
 
 const Header = () => {
+  const { user, isLoading } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -34,31 +38,39 @@ const Header = () => {
           </Link>
 
           {/* Enhanced Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              className="relative text-gray-600 hover:text-gray-900 font-medium transition-colors group"
-            >
-              <span className="relative z-10">Home</span>
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-            </Link>
-            <Link
-              href="/posts/new"
-              className="relative text-gray-600 hover:text-gray-900 font-medium transition-colors group"
-            >
-              <span className="relative z-10">Write</span>
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-            </Link>
-            <Link
-              href="/sign-in"
-              className="relative text-gray-600 hover:text-gray-900 font-medium transition-colors group"
-            >
-              <span className="relative z-10">Sign In</span>
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-            </Link>
-            <Link href="/sign-up">
-              <Button className="!w-auto">Get Started</Button>
-            </Link>
+          <nav className="hidden md:flex items-center">
+            <div className="space-x-8 flex flex-row items-center">
+              <Link
+                href="/"
+                className="relative text-gray-600 hover:text-gray-900 font-medium transition-colors group"
+              >
+                <span className="relative z-10">Home</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+              <Link
+                href="/posts"
+                className="relative text-gray-600 hover:text-gray-900 font-medium transition-colors group"
+              >
+                <span className="relative z-10">Posts</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+
+              {isLoading ? (
+                <div className="w-40 animate-pulse bg-gray-10 rounded-md h-8" />
+              ) : (
+                <>
+                  {user ? (
+                    <p>
+                      {user?.firstName} {user?.lastName}
+                    </p>
+                  ) : (
+                    <Link href="/sign-in">
+                      <Button className="!w-auto">Get Started</Button>
+                    </Link>
+                  )}
+                </>
+              )}
+            </div>
           </nav>
 
           {/* Enhanced Mobile menu button */}
@@ -67,21 +79,7 @@ const Header = () => {
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              {isMenuOpen ? (
-                <path d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
+            {isMenuOpen ? <MenuIcon /> : <CloseIcon />}
           </button>
         </div>
 
@@ -99,18 +97,13 @@ const Header = () => {
               Home
             </Link>
             <Link
-              href="/posts/new"
+              href="/posts"
               className="text-gray-600 hover:text-gray-900 font-medium transition-colors px-2 py-1 hover:bg-gray-50 rounded-lg"
             >
-              Write
+              Posts
             </Link>
-            <Link
-              href="/login"
-              className="text-gray-600 hover:text-gray-900 font-medium transition-colors px-2 py-1 hover:bg-gray-50 rounded-lg"
-            >
-              Sign In
-            </Link>
-            <Link href="/signup" className="block">
+
+            <Link href="/sign-in" className="block">
               <Button className="w-full">Get Started</Button>
             </Link>
           </nav>

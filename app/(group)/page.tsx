@@ -73,7 +73,7 @@ export default function Home() {
                 experiences, and stories with the world.
               </p>
               <div className="flex justify-center gap-4">
-                <Link href="/signup">
+                <Link href="/sign-up">
                   <Button>Get Started</Button>
                 </Link>
                 <Link href="/posts">

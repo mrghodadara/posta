@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/button/Index';
+import { useAuth } from '@/contexts/auth.context';
 
 // Mock data for posts
 const posts = [
@@ -51,6 +54,8 @@ const posts = [
 ];
 
 export default function Home() {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-grow">
@@ -73,9 +78,15 @@ export default function Home() {
                 experiences, and stories with the world.
               </p>
               <div className="flex justify-center gap-4">
-                <Link href="/sign-up">
-                  <Button>Get Started</Button>
-                </Link>
+                {user ? (
+                  <Link href="/posts/new">
+                    <Button>Create New Post</Button>
+                  </Link>
+                ) : (
+                  <Link href="/sign-up">
+                    <Button>Get Started</Button>
+                  </Link>
+                )}
                 <Link href="/posts">
                   <Button className="bg-white text-gray-900 hover:bg-gray-50">
                     Explore Posts

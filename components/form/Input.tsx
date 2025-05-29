@@ -25,7 +25,7 @@ const Input = ({ label, error, icon, ...input }: InputProps) => {
           <input
             {...input}
             className={twJoin(
-              'w-full rounded-lg border  bg-white py-3 pl-11 pr-3 font-inter text-sm leading-5 text-gray-25 shadow-input placeholder:text-gray-15 transition-all focus:outline-none focus:border-transparent focus:ring-1 focus:ring-blue-600 focus:ring-opacity-100',
+              'w-full rounded-lg border bg-white py-3 pl-11 pr-3 font-inter text-sm leading-5 text-gray-25 shadow-input placeholder:text-gray-15 transition-all focus:outline-none focus:border-transparent focus:ring-1 focus:ring-blue-600 focus:ring-opacity-100',
               error ? 'border-red-600' : 'border-gray-200',
               input.className
             )}

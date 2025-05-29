@@ -9,7 +9,7 @@ import { PasswordInput } from '@/components/form/PasswordInput';
 import { Spinner } from '@/components/loader/Spinner';
 import { AuthAPI } from '@/http/auth';
 
-export default function ChangePassword() {
+const ChangePassword = () => {
   const router = useRouter();
 
   const {
@@ -27,17 +27,18 @@ export default function ChangePassword() {
       confirmPassword: '',
     },
     validationSchema: Yup.object({
-      currentPassword: Yup.string()
-        .required('Required')
-        .matches(
-          /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\W_]).{6,}$/,
-          'Password must be at least 6 characters long and include letters, numbers, and special characters.'
-        ),
+      currentPassword: Yup.string().required('Required'),
       newPassword: Yup.string()
         .required('Required')
         .matches(
           /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\W_]).{6,}$/,
           'Password must be at least 6 characters long and include letters, numbers, and special characters.'
+        ),
+      confirmPassword: Yup.string()
+        .required('Required')
+        .oneOf(
+          [Yup.ref('newPassword')],
+          'Confirm password must match with Password'
         ),
     }),
     onSubmit: (
@@ -133,4 +134,6 @@ export default function ChangePassword() {
       </div>
     </div>
   );
-}
+};
+
+export default ChangePassword;

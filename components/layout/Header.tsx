@@ -62,7 +62,7 @@ const Header = () => {
                 </Link>
 
                 {isLoading ? (
-                  <div className="w-40 animate-pulse bg-gray-10 rounded-md h-8" />
+                  <div className="w-8 aspect-square animate-pulse bg-gray-10 rounded-full" />
                 ) : (
                   <>
                     {user ? (

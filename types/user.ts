@@ -13,6 +13,7 @@ export enum UserStatus {
 }
 
 export interface UserType {
+  _id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -20,4 +21,7 @@ export interface UserType {
   avatar?: string;
   provider: UserProvider;
   status?: UserStatus;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }

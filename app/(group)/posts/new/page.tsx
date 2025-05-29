@@ -15,6 +15,7 @@ import { Input } from '@/components/form/Input';
 import { PostAPI } from '@/http/post';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
+
 interface InitialValues {
   title: string;
   content: string;
@@ -26,6 +27,7 @@ const initialValues: InitialValues = {
   content: '',
   tags: [],
 };
+
 export default function CreatePost() {
   const router = useRouter();
 

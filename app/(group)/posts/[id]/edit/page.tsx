@@ -1,209 +1,241 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import { Button } from '@/components/button/Index';
-import { TextInput } from '@/components/input/TextInput';
-import { TextArea } from '@/components/input/TextArea';
-import { ImageUpload } from '@/components/input/ImageUpload';
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import 'react-quill/dist/quill.snow.css';
 
-interface ImageFile {
-  id: string;
-  file: File;
-  preview: string;
+import 'react-quill-new/dist/quill.snow.css';
+import dynamic from 'next/dynamic';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import toast from 'react-hot-toast';
+import { Button } from '@/components/button/Index';
+import { Spinner } from '@/components/loader/Spinner';
+import { Input } from '@/components/form/Input';
+import { PostAPI } from '@/http/post';
+
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
+
+interface InitialValues {
+  title: string;
+  content: string;
+  tags: string[];
 }
 
-export default function EditPost({ params }: { params: { id: string } }) {
+const initialValues: InitialValues = {
+  title: '',
+  content: '',
+  tags: [],
+};
+
+export default function EditPost() {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { id }: { id: string } = useParams();
+
   const [isLoading, setIsLoading] = useState(true);
-  const [images, setImages] = useState<ImageFile[]>([]);
-  const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    tags: '',
+
+  const [tagInput, setTagInput] = useState('');
+
+  const {
+    values,
+    errors,
+    touched,
+    setFieldValue,
+    setValues,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    isSubmitting,
+  } = useFormik({
+    initialValues,
+    validationSchema: Yup.object({
+      title: Yup.string()
+        .trim()
+        .min(16, 'Title must be minimum 16 character long')
+        .required('Required'),
+
+      content: Yup.string()
+        .trim()
+        .min(16, 'Content must be minimum 200 character long')
+        .required('Required'),
+    }),
+    onSubmit: ({ title, content, tags }, { setSubmitting, resetForm }) => {
+      setSubmitting(true);
+      PostAPI.editPost(id, { title, content, tags })
+        .then((response) => {
+          if (response?.status === 200) {
+            toast.success(response?.data?.data?.message);
+            router.push('/profile/my-posts');
+            resetForm();
+          }
+        })
+        .catch((error) => {
+          console.log('error', error);
+          toast.error(error?.response?.data?.message);
+        })
+        .finally(() => {
+          setSubmitting(false);
+        });
+    },
   });
 
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        // TODO: Replace with actual API call
-        // Simulated API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+  const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTagInput(e.target.value);
+  };
 
-        // Mock data - replace with actual API response
-        const mockPost = {
-          title: 'Getting Started with Web Development',
-          content:
-            'Learn the fundamentals of web development and start your journey...',
-          tags: 'Web Development, JavaScript',
-          images: ['https://picsum.photos/800/400'],
-        };
+  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
 
-        setFormData({
-          title: mockPost.title,
-          content: mockPost.content,
-          tags: mockPost.tags,
-        });
+      const newTag = tagInput.trim();
 
-        // Convert existing images to ImageFile format
-        if (mockPost.images.length > 0) {
-          setImages([
-            {
-              id: '1',
-              file: new File([], 'existing-image.jpg'),
-              preview: mockPost.images[0],
-            },
-          ]);
-        }
-      } catch (error) {
-        console.error('Error fetching post:', error);
-        alert('Failed to load post. Please try again.');
-        router.push('/profile/posts');
-      } finally {
-        setIsLoading(false);
+      if (newTag && !values?.tags.includes(newTag)) {
+        setFieldValue('tags', [...values?.tags, newTag]);
+        setTagInput('');
       }
-    };
-
-    fetchPost();
-  }, [router]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      // Create FormData for multipart/form-data
-      const submitData = new FormData();
-      submitData.append('title', formData.title);
-      submitData.append('content', formData.content);
-      submitData.append('tags', formData.tags);
-
-      // Only append new images
-      images.forEach((image) => {
-        if (image.file.size > 0) {
-          // Only append if it's a new file
-          submitData.append('images', image.file);
-        }
-      });
-
-      // TODO: Implement post update logic with FormData
-      console.log('Updating post:', submitData);
-      router.push('/profile/posts');
-    } catch (error) {
-      console.error('Error updating post:', error);
-      alert('Failed to update post. Please try again.');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const removeTag = (tagToRemove: string) => {
+    setFieldValue(
+      'tags',
+      values?.tags.filter((tag) => tag !== tagToRemove)
+    );
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading post...</p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  const getPost = () => {
+    setIsLoading(true);
+
+    PostAPI.getPost(id)
+      .then((response) => {
+        if (response?.status === 200 && response?.data?.data?.post) {
+          setValues({
+            title: response?.data?.data?.post?.title || '',
+            content: response?.data?.data?.post?.content || '',
+            tags: response?.data?.data?.post?.tags || '',
+          });
+        }
+      })
+      .catch((error) => {
+        toast.error(error?.response?.data?.message);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    if (id) {
+      getPost();
+    }
+  }, [id]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-
+    <div>
       <main className="flex-grow">
-        <section className="relative py-20 overflow-hidden">
-          {/* Background gradients */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-white to-purple-50/50 -z-10"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-100/30 via-transparent to-transparent -z-10"></div>
-
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Edit Post
+        <section className="relative py-8 overflow-hidden">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col gap-6">
+            <div>
+              <h1 className="text-2xl font-medium text-gray-900">
+                Update Post
               </h1>
-              <p className="text-xl text-gray-600">
-                Update your story and make it even better
-              </p>
+              {/* <p className="text-base text-gray-600">
+                Manage your account settings and preferences
+              </p> */}
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <TextInput
-                  label="Title"
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  required
-                  placeholder="Give your story a title"
-                />
-
-                <TextArea
-                  label="Content"
-                  id="content"
-                  name="content"
-                  value={formData.content}
-                  onChange={handleChange}
-                  required
-                  rows={12}
-                  placeholder="Write your story here..."
-                />
-
-                <ImageUpload
-                  label="Images"
-                  value={images}
-                  onChange={setImages}
-                  maxFiles={5}
-                  maxSize={10}
-                  helperText="Upload up to 5 images (PNG, JPG, GIF up to 10MB each)"
-                />
-
-                <TextInput
-                  label="Tags"
-                  id="tags"
-                  name="tags"
-                  value={formData.tags}
-                  onChange={handleChange}
-                  placeholder="Add tags separated by commas (e.g., Technology, Web3, AI)"
-                  helperText="Add relevant tags to help readers find your story"
-                />
-
-                {/* Submit Button */}
-                <div className="flex justify-end space-x-4">
-                  <Button
-                    type="button"
-                    onClick={() => router.back()}
-                    className="bg-white text-gray-900 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? 'Saving...' : 'Save Changes'}
-                  </Button>
+            <div className="p-6 bg-white rounded-lg border shadow-md border-gray-200">
+              {isLoading ? (
+                <div className="flex justify-center items-center py-20">
+                  <Spinner width={32} height={32} />
                 </div>
-              </form>
+              ) : (
+                <form
+                  onSubmit={handleSubmit}
+                  autoComplete="off"
+                  className="space-y-5"
+                >
+                  <div>
+                    <Input
+                      label="Title"
+                      id="title"
+                      name="title"
+                      placeholder="Enter Title"
+                      value={values?.title}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={
+                        touched?.title && errors?.title ? errors?.title : ''
+                      }
+                      className="pl-3"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Content
+                    </label>
+                    <div className="prose max-w-none">
+                      <ReactQuill
+                        value={values?.content}
+                        onChange={(data) => setFieldValue('content', data)}
+                        className="h-64 mb-12"
+                        placeholder="Write your post content here..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tags
+                    </label>
+
+                    {values?.tags && values?.tags?.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {values?.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800"
+                          >
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tag)}
+                              className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-indigo-200"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <Input
+                      id="tags"
+                      name="tags"
+                      placeholder="Type and press Enter or comma to add tags"
+                      value={tagInput}
+                      onChange={handleTagInputChange}
+                      onKeyDown={handleTagInputKeyDown}
+                      className="pl-3"
+                    />
+                  </div>
+
+                  <div>
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="max-w-28"
+                    >
+                      {isSubmitting ? <Spinner stroke="#FFFFFF" /> : 'Save'}
+                    </Button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }

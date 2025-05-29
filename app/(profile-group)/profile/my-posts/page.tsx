@@ -1,73 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/button/Index';
-
-interface Post {
-  id: string;
-  title: string;
-  excerpt: string;
-  date: string;
-  readTime: string;
-  likes: number;
-  comments: number;
-  tags: string[];
-  imageUrl?: string;
-}
+import { PostAPI } from '@/http/post';
+import { useAuth } from '@/contexts/auth.context';
+import { PostType } from '@/types/post';
+import { Spinner } from '@/components/loader/Spinner';
+import { DeleteIcon } from '@/components/icons/DeleteIcon';
+import { EditIcon } from '@/components/icons/EditIcon';
+import Link from 'next/link';
+import { DeletePostModal } from '@/components/modal/DeletePostModal';
 
 export default function MyPosts() {
   const router = useRouter();
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-  // Mock data - replace with actual API call
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: '1',
-      title: 'Getting Started with Web Development',
-      excerpt:
-        'Learn the fundamentals of web development and start your journey...',
-      date: '2024-03-15',
-      readTime: '5 min read',
-      likes: 42,
-      comments: 12,
-      tags: ['Web Development', 'JavaScript'],
-      imageUrl: 'https://picsum.photos/800/400',
-    },
-    {
-      id: '2',
-      title: 'The Future of AI in Software Development',
-      excerpt:
-        'Exploring how artificial intelligence is transforming the way we write code...',
-      date: '2024-03-10',
-      readTime: '8 min read',
-      likes: 78,
-      comments: 23,
-      tags: ['AI', 'Technology'],
-      imageUrl: 'https://picsum.photos/800/401',
-    },
-  ]);
+  const { user } = useAuth();
+
+  const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);
+  const [postId, setPostId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [posts, setPosts] = useState<PostType[]>([]);
 
   const handleEdit = (postId: string) => {
     router.push(`/posts/${postId}/edit`);
-  };
-
-  const handleDelete = async (postId: string) => {
-    if (!confirm('Are you sure you want to delete this post?')) {
-      return;
-    }
-
-    setIsDeleting(postId);
-    try {
-      // TODO: Implement delete API call
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulated API call
-      setPosts(posts.filter((post) => post.id !== postId));
-    } catch (error) {
-      console.error('Error deleting post:', error);
-      alert('Failed to delete post. Please try again.');
-    } finally {
-      setIsDeleting(null);
-    }
   };
 
   const formatDate = (dateString: string) => {
@@ -78,19 +34,47 @@ export default function MyPosts() {
     });
   };
 
-  return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-xl font-medium text-gray-700">My Posts</h1>
+  const getUserPosts = () => {
+    setIsLoading(true);
 
-      <div className="grid gap-8">
-        {posts.map((post) => (
-          <div
-            key={post.id}
-            className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex flex-col md:flex-row gap-6">
-              {/* Post Image */}
-              {post.imageUrl && (
+    PostAPI.getPostsByUserId(user?._id || '')
+      .then((response) => {
+        if (response?.status === 200) {
+          setPosts(response?.data?.data?.posts);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    if (user?._id) {
+      getUserPosts();
+    }
+  }, [user]);
+
+  return (
+    <div>
+      <h1 className="text-xl font-medium text-gray-700 p-5">My Posts</h1>
+
+      {isLoading && (
+        <div className="flex justify-center items-center">
+          <Spinner width={32} height={32} />
+        </div>
+      )}
+
+      {!isLoading && (
+        <div className="">
+          {posts.map((post) => (
+            <div
+              key={post._id}
+              className="bg-white border-t border-gray-200 p-5"
+            >
+              <div className="flex flex-col md:flex-row gap-6">
+                {/* Post Image */}
+                {/* {post.imageUrl && (
                 <div className="relative w-full md:w-48 h-48 rounded-xl overflow-hidden flex-shrink-0">
                   <img
                     src={post.imageUrl}
@@ -99,72 +83,91 @@ export default function MyPosts() {
                     className="object-cover"
                   />
                 </div>
-              )}
+              )} */}
 
-              {/* Post Content */}
-              <div className="flex-grow">
-                <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {post.title}
-                  </h2>
-                  <div className="flex space-x-2">
-                    <Button
-                      onClick={() => handleEdit(post.id)}
-                      className="!w-auto bg-white text-gray-900 hover:bg-gray-50"
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      onClick={() => handleDelete(post.id)}
-                      className="!w-auto bg-red-500 hover:bg-red-600"
-                      disabled={isDeleting === post.id}
-                    >
-                      {isDeleting === post.id ? 'Deleting...' : 'Delete'}
-                    </Button>
+                {/* Post Content */}
+                <div className="flex flex-grow flex-col gap-3">
+                  <div className="flex justify-between items-center w-full gap-2">
+                    <h2 className="text-2xl font-bold text-gray-900 w-full">
+                      {post.title}
+                    </h2>
+
+                    <div className="flex gap-1 items-center">
+                      <Link
+                        onClick={() => handleEdit(post._id)}
+                        className="text-gray-5 hover:bg-gray-10/50 rounded-full w-8 aspect-square flex justify-center items-center"
+                        href={`/posts/${post?._id}/edit`}
+                      >
+                        <EditIcon />
+                      </Link>
+
+                      <button
+                        onClick={() => {
+                          setPostId(post?._id);
+                          setIsOpenDeleteModal(true);
+                        }}
+                        className="text-red-600 hover:bg-red-100 rounded-full w-8 aspect-square flex justify-center items-center"
+                      >
+                        <DeleteIcon />
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <p className="text-gray-600 mb-4">{post.excerpt}</p>
+                  <p
+                    className="line-clamp-2"
+                    dangerouslySetInnerHTML={{ __html: post.content }}
+                  />
 
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {post.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                  <div className="flex flex-wrap gap-2">
+                    {post.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
 
-                <div className="flex items-center text-sm text-gray-500 space-x-4">
-                  <span>{formatDate(post.date)}</span>
-                  <span>•</span>
+                  <div className="flex items-center text-sm text-gray-500 space-x-4">
+                    <span>{formatDate(post.createdAt)}</span>
+                    {/* <span>•</span>
                   <span>{post.readTime}</span>
                   <span>•</span>
                   <span>{post.likes} likes</span>
                   <span>•</span>
-                  <span>{post.comments} comments</span>
+                  <span>{post.comments} comments</span> */}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {posts.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No posts yet
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Start writing your first post to share your story with the world
-            </p>
-            <Button onClick={() => router.push('/posts/new')}>
-              Write Your First Post
-            </Button>
-          </div>
-        )}
-      </div>
+          {!posts.length && (
+            <div className="flex flex-col items-center py-8 border-t border-gray-200">
+              <h3 className="text-2xl font-semibold text-gray-900">
+                No posts yet
+              </h3>
+              <p className="text-gray-600">
+                Start writing your first post to share your story with the world
+              </p>
+              <Button
+                className="w-fit mt-4"
+                onClick={() => router.push('/posts/new')}
+              >
+                Add Post
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <DeletePostModal
+        id={postId}
+        isOpen={isOpenDeleteModal}
+        setIsOpen={setIsOpenDeleteModal}
+        getData={getUserPosts}
+      />
     </div>
   );
 }

@@ -5,8 +5,16 @@ const createPost = (data: CreatePostType) => {
   return axios.post('/posts', data);
 };
 
+const getPosts = () => {
+  return axios.get(`/posts`);
+};
+
 const getPost = (id: string) => {
   return axios.get(`/posts/${id}`);
+};
+
+const getPostBySlug = (slug: string) => {
+  return axios.get(`/posts/slug/${slug}`);
 };
 
 const editPost = (id: string, data: Partial<CreatePostType>) => {
@@ -23,7 +31,9 @@ const getPostsByUserId = (userId: string) => {
 
 const PostAPI = {
   createPost,
+  getPosts,
   getPost,
+  getPostBySlug,
   editPost,
   deletePost,
   getPostsByUserId,

@@ -1,7 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { PostAPI } from '@/http/post';
+import { PostType } from '@/types/post';
+import { UserIcon } from '@/components/icons/UserIcon';
+import { formatDate } from '@/utils/formatDate';
 
 // Mock data for posts
 const posts = [
@@ -127,33 +131,36 @@ const availableTags = [
 
 export default function PostsList() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isLoading, setIsLoading] = useState(true);
+  const [posts, setPosts] = useState<PostType[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<'latest' | 'popular'>('latest');
-
-  // Filter and sort posts
-  const filteredPosts = posts
-    .filter((post) => {
-      const matchesSearch =
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesTags =
-        selectedTags.length === 0 ||
-        selectedTags.some((tag) => post.tags.includes(tag));
-      return matchesSearch && matchesTags;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'latest') {
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
-      }
-      return b.likes - a.likes;
-    });
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   };
+
+  const getUserPosts = () => {
+    setIsLoading(true);
+
+    PostAPI.getPosts()
+      .then((response) => {
+        if (response?.status === 200) {
+          setPosts(response?.data?.data?.posts);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    getUserPosts();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -292,42 +299,56 @@ export default function PostsList() {
                   : 'grid-cols-1'
               }`}
             >
-              {filteredPosts.map((post) => (
+              {posts.map((post) => (
                 <div
-                  key={post.id}
+                  key={post._id}
                   className="relative group bg-white rounded-xl border border-gray-100 overflow-hidden hover:border-blue-100 transition-colors"
                 >
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl opacity-0 group-hover:opacity-10 transition duration-300"></div>
+                  {/* <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl opacity-0 group-hover:opacity-10 transition duration-300"></div> */}
                   <div className="p-6">
                     <div className="flex items-center space-x-3 mb-4">
-                      <img
+                      {/* <img
                         src={post.author.avatar}
                         alt={post.author.name}
                         className="w-10 h-10 rounded-full"
-                      />
+                      /> */}
+
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white">
+                        {post?.user?.firstName?.[0]?.toUpperCase() || (
+                          <UserIcon />
+                        )}
+                      </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">
-                          {post.author.name}
+                          {post.user?.firstName} {post.user?.lastName}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {post.date} · {post.readTime}
+                          {formatDate(post.createdAt)}
                         </p>
                       </div>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
                       {post.title}
                     </h3>
-                    <p className="text-gray-600 mb-4">{post.excerpt}</p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {post.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
+
+                    <p
+                      className="line-clamp-2"
+                      dangerouslySetInnerHTML={{ __html: post.content }}
+                    />
+
+                    {post.tags && post.tags?.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {post.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <button className="text-gray-500 hover:text-blue-600 transition-colors">
@@ -362,7 +383,7 @@ export default function PostsList() {
                         </button>
                       </div>
                       <Link
-                        href={`/posts/${post.id}`}
+                        href={`/posts/${post.slug}`}
                         className="text-blue-600 hover:text-blue-700 font-medium"
                       >
                         Read more
